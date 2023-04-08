@@ -1,5 +1,6 @@
 import React, { createContext, useReducer } from "react";
-import { ACTIONS } from "../helpers/consts";
+import { ACTIONS, API } from "../helpers/consts";
+import axios from "axios";
 
 export const productsContext = createContext();
 
@@ -22,9 +23,45 @@ function reducer(state, action) {
 function ProductsContext({ children }) {
   const [state, dispatch] = useReducer(reducer, initialState);
 
+  async function getProducts() {
+    const { data } = await axios(API);
+    dispatch({
+      type: ACTIONS.GET_PRODUCTS,
+      payload: data,
+    });
+  }
+
+  async function addProduct(newProduct) {
+    await axios.post(`${API}`, newProduct);
+    getProducts();
+  }
+
+  async function deleteProduct(id) {
+    await axios.delete(`${API}/${id}`);
+    getProducts();
+  }
+
+  async function getOneProduct(id) {
+    const { data } = await axios(`${API}/${id}`);
+    dispatch({
+      type: ACTIONS.GET_ONE_PRODUCT,
+      payload: data,
+    });
+  }
+
+  async function editProduct(id, editedProduct) {
+    await axios.patch(`${API}/${id}`, editedProduct);
+    getProducts();
+  }
+
   const value = {
     products: state.products,
     oneProduct: state.oneProduct,
+    getProducts,
+    addProduct,
+    deleteProduct,
+    getOneProduct,
+    editProduct,
   };
   return (
     <productsContext.Provider value={value}>
